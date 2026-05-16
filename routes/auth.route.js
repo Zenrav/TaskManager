@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { login } from '../controllers/auth.controller.js';
 import { register } from '../controllers/auth.controller.js';
-
-
+import { refreshToken } from '../controllers/auth.controller.js';
+import { validate } from '../middlewares/validate.middleware.js';
+import { registerSchema } from '../utils/validation.js';
+import { loginSchema } from '../utils/validation.js';
 const authRouter = Router();
 
-authRouter.post('/auth/login', login);
-authRouter.post('/auth/register', register);
-
+authRouter.post('/auth/login', validate(loginSchema),login);
+authRouter.post('/auth/register', validate(registerSchema), register);
+authRouter.get('/auth/refresh-token/', refreshToken)
 export default authRouter;

@@ -1,13 +1,13 @@
 import User from '../models/user.model.js';
 import jwt from 'jsonwebtoken'
-import { JWT_EXPIRES_IN, JWT_SECRET } from '../config/env.js';
+import { JWT_EXPIRES_IN_ACCESS,JWT_EXPIRES_IN_REFRESH,  JWT_SECRET } from '../config/env.js';
 import { aj } from '../config/arcjet.js';
 
-const generateToken = (id) =>{
+const generateToken = (id , JWT_EXPIRATION_DEADLINE) =>{
     return jwt.sign(
         { id },
         JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN}
+        { expiresIn: JWT_EXPIRATION_DEADLINE}
     )
 }
 
@@ -46,12 +46,26 @@ export const register = async(req, res, next) =>{
         const userResponse = newUser.toObject();
         delete userResponse.password;
 
-        const token = generateToken(newUser._id);
+        const token = generateToken(newUser._id, JWT_EXPIRES_IN_ACCESS);
+        const refreshToken = generateToken(newUser._id, JWT_EXPIRES_IN_REFRESH);
+
+
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        })
+
+        console.log('Cookie set, checking headers:')
+        console.log(res.getHeaders())
+
         return res.status(201).json({
             success: true,
-            message : 'Account Sucessfully created!',
+            message: 'Account successfully created!',
             token,
-            data : {userResponse}
+            data: { userResponse }
         });
     }catch(error){
         next(error);
@@ -95,8 +109,15 @@ export const login = async (req, res, next) => {
             });
         }
 
-        const token = generateToken(user._id);
+        const token = generateToken(user._id, JWT_EXPIRES_IN_ACCESS);
+        const refreshToken = generateToken(user._id, JWT_EXPIRES_IN_REFRESH);
 
+        res.cookie("refreshToken" , refreshToken, {
+            httpOnly: true, 
+            secure: true,
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        })
         return res.status(200).json({
             success: true,
             token,
@@ -107,6 +128,32 @@ export const login = async (req, res, next) => {
     }
 };
 
+export const refreshToken = async (req, res, next)=>{
+    try{
 
+        const refreshToken = req.cookies.refreshToken;
+        const decoded = jwt.verify(refreshToken, JWT_SECRET)
+        const accessToken = generateToken(decoded._id, JWT_EXPIRES_IN_ACCESS);
 
+        const newRefreshToken = generateToken(decoded._id, JWT_EXPIRES_IN_REFRESH);
+
+        res.cookie("refreshToken" , newRefreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        })
+        if(!refreshToken){
+            return res.status(401).json({
+                message : "Refresh token not found"
+            })
+        }
+        return res.status(200).json({
+            message : "Access token refreshed successfully",
+            token: accessToken
+        })
+    }catch(error){
+        next(error);
+    }
+}
 
