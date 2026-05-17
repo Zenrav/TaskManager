@@ -230,3 +230,29 @@ export const logout = async(req, res, next) =>{
         next(err);
     }
 }
+
+
+export const logoutAll = async(req , res, next) =>{
+    try{
+
+        const refreshToken = req.cookies.refreshToken;
+        if(!refreshToken){
+            return res.status(400).json({
+                message : "Refresh token not found"
+            })
+        }
+
+        const decoded = jwt.verify(refreshToken, JWT_SECRET);
+        await sessionModel.updateMany({
+            user : decoded.id,
+            revoked: false
+        }, {
+            revoked: true
+        });
+
+        res.clearCookie("refreshToken");
+
+    }catch(err){
+        next(err);
+    }
+}
