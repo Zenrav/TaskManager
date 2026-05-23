@@ -14,7 +14,7 @@ A production-grade REST API for managing tasks across teams, built with Node.js,
 - **Redis Caching** — Query result caching with automatic invalidation
 - **Rate Limiting** — Per-route rate limiting and bot detection via Arcjet
 - **Input Validation** — Schema-based validation using Zod
-- **AI Assistant** — Claude-powered daily schedule generator and task Q&A for engineers
+- **AI Assistant** — Gemini-powered daily schedule generator and task Q&A for engineers
 
 ---
 
