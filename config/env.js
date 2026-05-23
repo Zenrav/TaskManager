@@ -8,7 +8,8 @@ export const {
     JWT_EXPIRES_IN_REFRESH,
     ARCJET_KEY, 
     NODE_ENV, 
-    REDIS_URL 
+    REDIS_URL,
+    GOOGLE_API_KEY
 } = process.env;
 
 // Debugging: This will run as soon as any file imports this one
